@@ -28,7 +28,7 @@ class Ingredient(CookbookEntry):
 app = Flask(__name__)
 
 # Store your recipes here!
-cookbook = None
+cookbook = [] 
 
 # Task 1 helper (don't touch)
 @app.route("/parse", methods=['POST'])
@@ -43,8 +43,9 @@ def parse():
 # [TASK 1] ====================================================================
 # Takes in a recipeName and returns it in a form that 
 def parse_handwriting(recipeName: str) -> Union[str | None]:
-	# TODO: implement me
-	return recipeName
+	alp_str = re.sub(r'[^a-zA-Z0-9]', ' ', recipeName)
+
+	return " ".join(alp_str.split()).title()
 
 
 # [TASK 2] ====================================================================
@@ -68,4 +69,8 @@ def summary():
 # =============================================================================
 
 if __name__ == '__main__':
+	print(parse_handwriting("meatball"))
+	print(parse_handwriting("a b   c D"))
+	print(parse_handwriting("A  @@b @c     F"))
+	print(parse_handwriting("meatball hello"))
 	app.run(debug=True, port=8080)
