@@ -43,17 +43,21 @@ def parse():
 # [TASK 1] ====================================================================
 # Takes in a recipeName and returns it in a form that 
 def parse_handwriting(recipeName: str) -> Union[str | None]:
-	alp_str = re.sub(r'[^a-zA-Z0-9]', ' ', recipeName)
-
-	return " ".join(alp_str.split()).title()
+	if not recipeName:
+		return None
+ 
+	remove_non_alp = re.sub(r'[^a-zA-Z\s\-]', '', recipeName)
+	replace_space = re.sub(r'[^a-zA-Z]', ' ', remove_non_alp)
+	return " ".join(replace_space.split()).title()
 
 
 # [TASK 2] ====================================================================
 # Endpoint that adds a CookbookEntry to your magical cookbook
 @app.route('/entry', methods=['POST'])
 def create_entry():
-	# TODO: implement me
-	return 'not implemented', 500
+	json = request.get_json()
+
+	return json, 500
 
 
 # [TASK 3] ====================================================================
@@ -72,5 +76,5 @@ if __name__ == '__main__':
 	print(parse_handwriting("meatball"))
 	print(parse_handwriting("a b   c D"))
 	print(parse_handwriting("A  @@b @c     F"))
-	print(parse_handwriting("meatball hello"))
+	print(parse_handwriting("RizZ Riso00Tto"))
 	app.run(debug=True, port=8080)
