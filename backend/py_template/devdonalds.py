@@ -55,7 +55,7 @@ def parse_handwriting(recipeName: str) -> Union[str | None]:
 # Endpoint that adds a CookbookEntry to your magical cookbook
 
 def is_unique(string:str, ls: List[CookbookEntry]):
-	print(ls)
+	(ls)
 	names = set([l["name"] for l in ls])
 	return string not in names
 
@@ -68,7 +68,6 @@ def create_entry():
 	json = request.get_json()
 	# check errors, if not a valid type 
 	#  if cooktime is < 0 
-	print(json, json["type"])
 	if json["type"] not in ['ingredient', 'recipe'] :
 		return jsonify(message="Not a valid type"), 400
 
@@ -90,10 +89,68 @@ def create_entry():
 
 # [TASK 3] ====================================================================
 # Endpoint that returns a summary of a recipe that corresponds to a query name
+
+#  checkss ssearch name
+# returns true if valid 
+# false overwise
+def check_recipe (name: str):
+	name_lookup = {item["name"]: item for item in cookbook}
+
+	result = name_lookup.get(name)
+ 
+	if not result:
+		return False
+ 
+	if result["type"] != "recipe":
+		return False
+
+	for item in result.get("requiredItems", []):
+		if not name_lookup.get(item["name"]):
+			return False
+      
+	return True
+
+
 @app.route('/summary', methods=['GET'])
 def summary():
-	# TODO: implement me
-	return 'not implemented', 500
+	# The endpoint should additionally return with status code 400 if:
+
+    # A recipe with the corresponding name cannot be found.
+    # The searched name is NOT a recipe name (ie. an ingredient).
+    # The recipe contains recipes or ingredients that aren't in the cookbook.
+	search = request.args.get("name")
+	if  not search or not check_recipe(search):
+		print("hi")
+		return "recipe does not exist ", 400 
+
+	name_lookup = {item["name"]: item for item in cookbook}
+
+ 
+	#  Iteratively add entries into a stack and calcualte the sum
+	# if the value iss a recipie just multiple the current qunality to the entry and add its required items 
+	# if its a ingredient jusst calcualt total time and add to total-ingredidents
+ 
+	# only have 1 since we only want 1 "serving" of the searched value
+	s = [(search, 1)] 
+	total_time = 0
+	total_ingredients = {}
+	while s:
+		current_name, current_q = s.pop()
+		current_item = name_lookup.get(current_name)
+		if current_item["type"] == "ingredient":
+			total_time += current_item.get("cookTime") * current_q
+			total_ingredients[current_name] = total_ingredients.get(current_name, 0) + current_q
+   
+		elif current_item["type"] == "recipe":
+			for n in current_item["requiredItems"]:
+				s.append((n["name"], (n["quantity"] * current_q)))
+			
+
+	return jsonify({
+		"name": search,
+		"cookTime": total_time,
+		"ingredients": [{"name": k, "quantity": v} for k, v in total_ingredients.items()]
+	}), 200
 
 
 # =============================================================================
@@ -101,8 +158,4 @@ def summary():
 # =============================================================================
 
 if __name__ == '__main__':
-	print(parse_handwriting("meatball"))
-	print(parse_handwriting("a b   c D"))
-	print(parse_handwriting("A  @@b @c     F"))
-	print(parse_handwriting("RizZ Riso00Tto"))
 	app.run(debug=True, port=8080)
