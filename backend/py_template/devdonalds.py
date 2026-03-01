@@ -53,11 +53,39 @@ def parse_handwriting(recipeName: str) -> Union[str | None]:
 
 # [TASK 2] ====================================================================
 # Endpoint that adds a CookbookEntry to your magical cookbook
+
+def is_unique(string:str, ls: List[CookbookEntry]):
+	print(ls)
+	names = set([l["name"] for l in ls])
+	return string not in names
+
+def unique_requiredItems(ls: List ):
+	names = set([l["name"] for l in ls])
+	return len(names) == len(ls)
+ 
 @app.route('/entry', methods=['POST'])
 def create_entry():
 	json = request.get_json()
+	# check errors, if not a valid type 
+	#  if cooktime is < 0 
+	print(json, json["type"])
+	if json["type"] not in ['ingredient', 'recipe'] :
+		return jsonify(message="Not a valid type"), 400
 
-	return json, 500
+	if  json.get("type") == "ingredient":
+		if  json["cookTime"] < 0 or json["cookTime"] == None :
+			return jsonify(message="cookTime musst be >= 0"), 400
+		
+	if not is_unique(json["name"], cookbook):
+		return jsonify(message="name already exists!"), 400
+
+	if json.get("type") == "recipe":
+		if not  unique_requiredItems(json["requiredItems"]):
+			return jsonify(message="required items must be unique!"), 400
+
+	cookbook.append(json)
+
+	return {}, 200
 
 
 # [TASK 3] ====================================================================
